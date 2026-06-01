@@ -6,12 +6,16 @@ type LoginPanelProps = {
   tenant: Tenant;
   error?: string;
   rootUrl: string;
+  loginPath?: string;
+  redirectTo?: string;
 };
 
 export function LoginPanel({
   tenant,
   error,
   rootUrl,
+  loginPath = "/login",
+  redirectTo = "/dashboard",
 }: LoginPanelProps) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
@@ -23,6 +27,9 @@ export function LoginPanel({
           Tenant Login
         </h1>
         <form action={loginAction} className="mt-8 grid gap-4">
+          <input name="tenantKey" type="hidden" value={tenant.tenantKey} />
+          <input name="loginPath" type="hidden" value={loginPath} />
+          <input name="redirectTo" type="hidden" value={redirectTo} />
           <label className="grid gap-2 text-sm font-medium text-zinc-700">
             Email
             <input

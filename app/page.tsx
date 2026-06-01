@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { createTenantAction, existingTenantLoginAction } from "@/app/actions";
 import { findTenantByKey } from "@/lib/tenants";
-import { getTenantUrl } from "@/lib/urls";
+import { getRootUrl } from "@/lib/urls";
 
 type HomeProps = {
   searchParams: Promise<{
@@ -24,7 +24,8 @@ export default async function Home({ searchParams }: HomeProps) {
   const signedOut = firstValue(params.signedOut);
   const tenant = await findTenantByKey(tenantKey);
   const headersList = await headers();
-  const tenantUrl = tenant ? getTenantUrl(headersList, tenant.tenantKey) : null;
+  const rootUrl = getRootUrl(headersList);
+  const tenantUrl = tenant ? `${rootUrl}/t/${tenant.tenantKey}` : null;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col justify-center px-6 py-16">
@@ -128,9 +129,9 @@ export default async function Home({ searchParams }: HomeProps) {
             <div className="mt-5 flex flex-wrap gap-3">
               <a
                 className="rounded-md bg-emerald-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-800"
-                href={`${tenantUrl}/dashboard`}
+                href={`${tenantUrl}/login`}
               >
-                Open Dashboard
+                Open Tenant Login
               </a>
             </div>
           </section>

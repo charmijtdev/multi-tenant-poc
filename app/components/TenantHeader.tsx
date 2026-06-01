@@ -4,7 +4,7 @@ import Link from "next/link";
 import { logoutAction } from "@/app/actions";
 import { useTenant } from "@/app/components/TenantProvider";
 
-export function TenantHeader() {
+export function TenantHeader({ basePath = "" }: { basePath?: string }) {
   const tenant = useTenant();
 
   return (
@@ -15,12 +15,15 @@ export function TenantHeader() {
           <p className="font-semibold text-zinc-950">{tenant.organizationName}</p>
         </div>
         <nav className="flex items-center gap-3 text-sm font-medium">
-          <Link className="text-zinc-700 hover:text-zinc-950" href="/dashboard">
+          <Link
+            className="text-zinc-700 hover:text-zinc-950"
+            href={`${basePath}/dashboard`}
+          >
             Dashboard
           </Link>
           <Link
             className="text-zinc-700 hover:text-zinc-950"
-            href="/dashboard/products"
+            href={`${basePath}/dashboard/products`}
           >
             Products
           </Link>

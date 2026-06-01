@@ -10,7 +10,7 @@ import {
 import { clearTenantSession, createTenantSession } from "@/lib/session";
 import { requireTenantFromRequest } from "@/lib/tenant-request";
 import { createTenant, findTenantByKey, generateTenantKey } from "@/lib/tenants";
-import { getRootUrl, getTenantUrl } from "@/lib/urls";
+import { getRootUrl } from "@/lib/urls";
 
 export async function createTenantAction(formData: FormData) {
   const organizationName = formData.get("organizationName");
@@ -47,59 +47,98 @@ export async function existingTenantLoginAction(formData: FormData) {
     redirect("/?loginError=Tenant%20not%20found");
   }
 
-  const tenantUrl = getTenantUrl(await headers(), tenant.tenantKey);
-  redirect(`${tenantUrl}/login`);
+  redirect(`/t/${tenant.tenantKey}/login`);
 }
 
 export async function loginAction(formData: FormData) {
-  const tenant = await requireTenantFromRequest();
+  const tenantKeyValue = formData.get("tenantKey");
+  const tenant =
+    typeof tenantKeyValue === "string" && tenantKeyValue
+      ? await findTenantByKey(tenantKeyValue)
+      : await requireTenantFromRequest();
   const email = formData.get("email");
   const password = formData.get("password");
+  const loginPathValue = formData.get("loginPath");
+  const redirectToValue = formData.get("redirectTo");
+  const loginPath =
+    typeof loginPathValue === "string" && loginPathValue.startsWith("/")
+      ? loginPathValue
+      : "/login";
+  const redirectTo =
+    typeof redirectToValue === "string" && redirectToValue.startsWith("/")
+      ? redirectToValue
+      : "/dashboard";
+
+  if (!tenant) {
+    redirect(`${loginPath}?error=Tenant%20not%20found`);
+  }
 
   if (typeof email !== "string" || typeof password !== "string") {
-    redirect("/login?error=Email%20and%20password%20are%20required");
+    redirect(`${loginPath}?error=Email%20and%20password%20are%20required`);
   }
 
   if (!email.trim() || password !== "password") {
-    redirect("/login?error=Invalid%20tenant%20credentials");
+    redirect(`${loginPath}?error=Invalid%20tenant%20credentials`);
   }
 
   await createTenantSession(tenant, email.trim().toLowerCase());
-  redirect("/dashboard");
+  redirect(redirectTo);
 }
 
 export async function createProductAction(formData: FormData) {
-  const tenant = await requireTenantFromRequest();
+  const tenantKeyValue = formData.get("tenantKey");
+  const redirectToValue = formData.get("redirectTo");
+  const redirectTo =
+    typeof redirectToValue === "string" && redirectToValue.startsWith("/")
+      ? redirectToValue
+      : "/dashboard/products";
+  const tenant =
+    typeof tenantKeyValue === "string" && tenantKeyValue
+      ? await findTenantByKey(tenantKeyValue)
+      : await requireTenantFromRequest();
   const name = formData.get("name");
   const priceValue = formData.get("price");
 
+  if (!tenant) {
+    redirect(`${redirectTo}?error=Tenant%20not%20found`);
+  }
+
   if (typeof name !== "string" || !name.trim()) {
-    redirect("/dashboard/products?error=Product%20name%20is%20required");
+    redirect(`${redirectTo}?error=Product%20name%20is%20required`);
   }
 
   const price = typeof priceValue === "string" ? Number(priceValue) : NaN;
 
   if (!Number.isFinite(price) || price < 0) {
-    redirect("/dashboard/products?error=Valid%20price%20is%20required");
+    redirect(`${redirectTo}?error=Valid%20price%20is%20required`);
   }
 
   await createProductForTenant(tenant.id, name, price);
-  revalidatePath("/dashboard/products");
-  redirect("/dashboard/products");
+  revalidatePath(redirectTo);
+  redirect(redirectTo);
 }
 
 export async function deleteProductAction(formData: FormData) {
-  const tenant = await requireTenantFromRequest();
+  const tenantKeyValue = formData.get("tenantKey");
+  const redirectToValue = formData.get("redirectTo");
+  const redirectTo =
+    typeof redirectToValue === "string" && redirectToValue.startsWith("/")
+      ? redirectToValue
+      : "/dashboard/products";
+  const tenant =
+    typeof tenantKeyValue === "string" && tenantKeyValue
+      ? await findTenantByKey(tenantKeyValue)
+      : await requireTenantFromRequest();
   const productIdValue = formData.get("productId");
   const productId =
     typeof productIdValue === "string" ? Number(productIdValue) : NaN;
 
-  if (Number.isInteger(productId)) {
+  if (tenant && Number.isInteger(productId)) {
     await deleteProductForTenant(tenant.id, productId);
-    revalidatePath("/dashboard/products");
+    revalidatePath(redirectTo);
   }
 
-  redirect("/dashboard/products");
+  redirect(redirectTo);
 }
 
 export async function logoutAction() {
