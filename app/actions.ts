@@ -9,8 +9,8 @@ import {
 } from "@/lib/products";
 import { clearTenantSession, createTenantSession } from "@/lib/session";
 import { requireTenantFromRequest } from "@/lib/tenant-request";
-import { createTenant } from "@/lib/tenants";
-import { getRootUrl } from "@/lib/urls";
+import { createTenant, findTenantByKey, generateTenantKey } from "@/lib/tenants";
+import { getRootUrl, getTenantUrl } from "@/lib/urls";
 
 export async function createTenantAction(formData: FormData) {
   const organizationName = formData.get("organizationName");
@@ -31,6 +31,24 @@ export async function createTenantAction(formData: FormData) {
   }
 
   redirect(`/?tenantKey=${tenantKey}`);
+}
+
+export async function existingTenantLoginAction(formData: FormData) {
+  const tenantKeyValue = formData.get("tenantKey");
+
+  if (typeof tenantKeyValue !== "string" || !tenantKeyValue.trim()) {
+    redirect("/?loginError=Tenant%20key%20is%20required");
+  }
+
+  const tenantKey = generateTenantKey(tenantKeyValue);
+  const tenant = await findTenantByKey(tenantKey);
+
+  if (!tenant) {
+    redirect("/?loginError=Tenant%20not%20found");
+  }
+
+  const tenantUrl = getTenantUrl(await headers(), tenant.tenantKey);
+  redirect(`${tenantUrl}/login`);
 }
 
 export async function loginAction(formData: FormData) {

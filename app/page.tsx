@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { headers } from "next/headers";
-import { createTenantAction } from "@/app/actions";
+import { createTenantAction, existingTenantLoginAction } from "@/app/actions";
 import { findTenantByKey } from "@/lib/tenants";
 import { getTenantUrl } from "@/lib/urls";
 
@@ -8,6 +7,7 @@ type HomeProps = {
   searchParams: Promise<{
     tenantKey?: string | string[];
     error?: string | string[];
+    loginError?: string | string[];
     signedOut?: string | string[];
   }>;
 };
@@ -20,6 +20,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const tenantKey = firstValue(params.tenantKey);
   const error = firstValue(params.error);
+  const loginError = firstValue(params.loginError);
   const signedOut = firstValue(params.signedOut);
   const tenant = await findTenantByKey(tenantKey);
   const headersList = await headers();
@@ -67,6 +68,38 @@ export default async function Home({ searchParams }: HomeProps) {
           </p>
         ) : null}
 
+        <section className="mt-8 border-t border-zinc-200 pt-8">
+          <h2 className="text-2xl font-semibold text-zinc-950">
+            Login to Existing Tenant
+          </h2>
+          <p className="mt-2 text-sm text-zinc-600">
+            Enter a tenant key or organization name to open its login page.
+          </p>
+          <form action={existingTenantLoginAction} className="mt-5 grid gap-4">
+            <label className="grid gap-2 text-sm font-medium text-zinc-700">
+              Tenant Key
+              <input
+                required
+                name="tenantKey"
+                type="text"
+                placeholder="jyotitechnosoft-llp"
+                className="h-12 rounded-md border border-zinc-300 px-4 text-base text-zinc-950 outline-none transition focus:border-zinc-900"
+              />
+            </label>
+            <button
+              type="submit"
+              className="h-12 rounded-md border border-zinc-300 px-5 font-medium text-zinc-900 transition hover:bg-zinc-50"
+            >
+              Open Tenant Login
+            </button>
+          </form>
+          {loginError ? (
+            <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {loginError}
+            </p>
+          ) : null}
+        </section>
+
         {tenant && tenantUrl ? (
           <section className="mt-8 rounded-lg border border-emerald-200 bg-emerald-50 p-6">
             <h2 className="text-2xl font-semibold text-emerald-950">
@@ -99,12 +132,6 @@ export default async function Home({ searchParams }: HomeProps) {
               >
                 Open Dashboard
               </a>
-              <Link
-                className="rounded-md border border-emerald-300 px-4 py-2 text-sm font-medium text-emerald-950 transition hover:bg-emerald-100"
-                href={`/org/${tenant.tenantKey}`}
-              >
-                Open Fallback Route
-              </Link>
             </div>
           </section>
         ) : null}
