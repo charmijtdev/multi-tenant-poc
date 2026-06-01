@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   createProductForTenant,
@@ -9,6 +10,7 @@ import {
 import { clearTenantSession, createTenantSession } from "@/lib/session";
 import { requireTenantFromRequest } from "@/lib/tenant-request";
 import { createTenant } from "@/lib/tenants";
+import { getRootUrl } from "@/lib/urls";
 
 export async function createTenantAction(formData: FormData) {
   const organizationName = formData.get("organizationName");
@@ -84,5 +86,6 @@ export async function deleteProductAction(formData: FormData) {
 
 export async function logoutAction() {
   await clearTenantSession();
-  redirect("http://localhost:3000/?signedOut=1");
+  const rootUrl = getRootUrl(await headers());
+  redirect(`${rootUrl}/?signedOut=1`);
 }

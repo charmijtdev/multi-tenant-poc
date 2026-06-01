@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { createTenantAction } from "@/app/actions";
 import { findTenantByKey } from "@/lib/tenants";
+import { getTenantUrl } from "@/lib/urls";
 
 type HomeProps = {
   searchParams: Promise<{
@@ -20,9 +22,8 @@ export default async function Home({ searchParams }: HomeProps) {
   const error = firstValue(params.error);
   const signedOut = firstValue(params.signedOut);
   const tenant = await findTenantByKey(tenantKey);
-  const tenantUrl = tenant
-    ? `http://${tenant.tenantKey}.localhost:3000`
-    : null;
+  const headersList = await headers();
+  const tenantUrl = tenant ? getTenantUrl(headersList, tenant.tenantKey) : null;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col justify-center px-6 py-16">

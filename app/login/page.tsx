@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { loginAction } from "@/app/actions";
 import { getTenantSession } from "@/lib/session";
 import { requireTenantFromRequest } from "@/lib/tenant-request";
+import { getRootUrl } from "@/lib/urls";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -23,6 +25,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const error = firstValue((await searchParams).error);
+  const rootUrl = getRootUrl(await headers());
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
@@ -72,7 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
           <Link
             className="mt-3 inline-flex rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
-            href="http://localhost:3000"
+            href={rootUrl}
           >
             Create or Switch Tenant
           </Link>
